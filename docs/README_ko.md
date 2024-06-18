@@ -701,6 +701,3 @@ parameters: {
 ```
 </details>
 
-## Acknowledgement
-* [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)
-* [TensorRT-LLM Backend](https://github.com/triton-inference-server/tensorrtllm_backend)
