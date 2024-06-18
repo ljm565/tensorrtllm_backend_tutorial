@@ -45,6 +45,8 @@ repo. If you don't find your answer there you can ask questions on the
 
 There are several ways to access the TensorRT-LLM Backend.
 
+**Before Triton 23.10 release, please use [Option 3 to build TensorRT-LLM backend via Docker](#option-3-build-via-docker).**
+
 ### Run the Pre-built Docker Container
 
 Starting with Triton 23.10 release, Triton includes a container with the TensorRT-LLM
@@ -186,7 +188,7 @@ prompts(string) to input_ids(list of ints).
 
 This model is a wrapper of your TensorRT-LLM model and is used
 for inferencing.
-Input specification can be found [here](https://github.com/NVIDIA/TensorRT-LLM/blob/main/docs/source/advanced/inference-request.md)
+Input specification can be found [here](https://github.com/NVIDIA/TensorRT-LLM/blob/main/docs/source/inference_request.md)
 
 #### postprocessing
 
@@ -552,7 +554,7 @@ pkill tritonserver
 
 ## Triton Metrics
 Starting with the 23.11 release of Triton, users can now obtain TRT LLM Batch
-Manager [statistics](https://github.com/NVIDIA/TensorRT-LLM/blob/main/docs/source/advanced/batch-manager.md#statistics)
+Manager [statistics](https://github.com/NVIDIA/TensorRT-LLM/blob/main/docs/source/batch_manager.md#statistics)
 by querying the Triton metrics endpoint. This can be accomplished by launching
 a Triton server in any of the ways described above (ensuring the build code /
 container is 23.11 or later) and querying the server. Upon receiving a

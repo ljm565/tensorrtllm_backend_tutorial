@@ -442,10 +442,10 @@ executor::OutputConfig getOutputConfigFromTensors(InputTensors const& inputsTens
     return executor::OutputConfig(returnLogProbs, returnContextLogits, returnGenerationLogits);
 }
 
-std::optional<executor::ExternalDraftTokensConfig> getExternalDraftTokensConfigFromTensors(
+std::optional<executor::SpeculativeDecodingConfig> getSpeculativeDecodingConfigFromTensors(
     InputTensors const& inputsTensors)
 {
-    std::optional<executor::ExternalDraftTokensConfig> externalDraftTokensConfig = std::nullopt;
+    std::optional<executor::SpeculativeDecodingConfig> speculativeDecodingConfig = std::nullopt;
 
     if (inputsTensors.count(InputFieldsNames::draftInputs))
     {
@@ -465,10 +465,10 @@ std::optional<executor::ExternalDraftTokensConfig> getExternalDraftTokensConfigF
         utils::extractOptionalSingleton<float>(
             inputsTensors, InputFieldsNames::draftAcceptanceThreshold, draftAcceptanceThreshold);
 
-        externalDraftTokensConfig
-            = executor::ExternalDraftTokensConfig(draftInputs, draftLogits, draftAcceptanceThreshold);
+        speculativeDecodingConfig
+            = executor::SpeculativeDecodingConfig(draftInputs, draftLogits, draftAcceptanceThreshold);
     }
-    return externalDraftTokensConfig;
+    return speculativeDecodingConfig;
 }
 
 std::optional<executor::PromptTuningConfig> getPromptTuningConfigFromTensors(InputTensors const& inputsTensors)
@@ -582,10 +582,10 @@ executor::Request createRequestFromInputTensors(std::unordered_map<std::string, 
 
     auto loraConfig = utils::getLoraConfigFromTensors(inputsTensors);
 
-    auto externalDraftTokensConfig = utils::getExternalDraftTokensConfigFromTensors(inputsTensors);
+    auto speculativeDecodingConfig = utils::getSpeculativeDecodingConfigFromTensors(inputsTensors);
 
     return executor::Request(inputTokens, maxNewTokens, streaming, samplingConfig, outConfig, endId, padId, badWords,
-        stopWords, embeddingBias, externalDraftTokensConfig, pTuningConfig, loraConfig, std::nullopt);
+        stopWords, embeddingBias, speculativeDecodingConfig, pTuningConfig, loraConfig, std::nullopt);
 }
 
 } // namespace triton::backend::inflight_batcher_llm::utils
