@@ -1,11 +1,11 @@
 # TensorRT-LLM Backend
-한국어 버전의 설명은 [여기](./docs/README_ko.md)를 참고하시기 바랍니다.
 
 ## Introduction
-Here's a brief summary of the process of converting an LLM model to TensorRT and serving the converted model with Triton.
-This tutorial uses the [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM) and [TensorRT-LLM Backend](https://github.com/triton-inference-server/tensorrtllm_backend) repositories, both based on version v0.10.0.
-The entire process, from LLM conversion to Triton serving, can be carried out in a Linux environment.
-The following tutorial uses Microsoft's [Phi3](https://huggingface.co/microsoft/Phi-3-mini-128k-instruct) as an example and explains the process from installing the NVIDIA Container Toolkit to deploying Triton.
+본 레포지토리는 LLM 모델을 TensorRT로 변환하고, 변환된 모델을 Triton으로 serving 하는 과정을 간략히 정리합니다.
+여기서는 TensorRT-LLM, TensorRT-LLM Backend 레포지토리를 사용하며, 각각 v0.10.0 버전을 기준으로 tutorial을 진행합니다.
+아래 LLM 변환부터 triton 서빙까지의 과정은 Linux 환경에서 진행할 수 있습니다.
+아래 튜토리얼은 microsoft의 phi3를 예제로 사용하며, nvidia container toolkit 설치부터, triton 올리는 방법까지 과정을 설명합니다.
+
 <br><br><br>
 
 ## Environment Settings
@@ -23,7 +23,7 @@ curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dear
 sudo sed -i -e '/experimental/ s/^#//g' /etc/apt/sources.list.d/nvidia-container-toolkit.list
 ```
 
-### 1.3. Install the NVIDIA Container Toolkit packages
+#### 1.3. Install the NVIDIA Container Toolkit packages
 ```bash
 sudo apt-get update
 sudo apt-get install -y nvidia-container-toolkit
@@ -43,24 +43,24 @@ git fetch origin refs/tags/v0.10.0
 git checkout tags/v0.10.0
 ```
 
-### 2.2. Docker environment settings
-We will set up the TensorRT-LLM execution environment using [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/cuda/tags)'s docker image.
-* PATH_OF_THIS_REPO: Path of `tensorrtllm_backend` repository.
-* PATH_OF_LOCAL_CACHE: Path of cache folder. Generally, the cache folder is created in the home directory (e.g. `~/.cache/`).
+#### 2.2. Docker environment settings
+여기서 TensorRT-LLM 실행 환경을 구축하기 위해서 [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/cuda/tags)의 Docker image를 사용합니다.
+* `PATH_OF_THIS_REPO`: Path of `tensorrtllm_backend` repository.
+* `PATH_OF_LOCAL_CACHE`: Path of cache folder. Generally, the cache folder is created in the home directory (e.g. `~/.cache/`).
 ```bash
 docker run --name tensorrt-llm --runtime=nvidia --gpus all --entrypoint /bin/bash -it -d -v ${PATH_OF_THIS_REPO}:/tensorrtllm_backend -v ${PATH_OF_LOCAL_CACHE}:/root/.cache nvidia/cuda:12.4.0-devel-ubuntu22.04
 ```
-After executing the above command, run the container named tensorrt-llm.
+위 명령어를 통해 Docker container를 만든 후, tensorrt-llm이라는 이름의 container를 실행할 수 있습니다. 
 ```bash
 docker exec -it tensorrt-llm /bin/bash
 ```
 
 #### 2.3. Setting up a Python environment
-We will now install Python 3.10 inside the Docker container.
+여기서는 Docker container 안에서 Python 3.10을 설치합니다.
 ```bash
 apt-get update && apt-get -y install python3.10 python3-pip openmpi-bin libopenmpi-dev git git-lfs
 ```
-Then, we will install TensorRT-LLM package.
+그리고 TensorRT-LLM 패키지를 설치합니다.
 ```bash
 cd /tensorrtllm_backend
 git lfs install
@@ -68,7 +68,7 @@ pip3 install tensorrt-llm==0.10.0
 ```
 
 #### 2.4. Verification of the installation.
-If executing each of the following commands does not result in errors, then the installation is considered successful.
+모든 환경이 성공적으로 설치 되었다면 아래 명령어를 실행 했을 때 오류가 나타나지 않아야 합니다.
 ```bash
 nvidia-smi
 ```
@@ -94,14 +94,13 @@ huggingface-cli login --token *****
 ```
 
 #### 3.2. Install requirements
-Here, we will use [Phi-3-mini-128k-instruct](https://huggingface.co/microsoft/Phi-3-mini-128k-instruct) model as an example.
+이제부터 [Phi-3-mini-128k-instruct](https://huggingface.co/microsoft/Phi-3-mini-128k-instruct) 모델을 가지고 튜토리얼을 진행합니다.
 ```bash
 cd examples/phi
 pip3 install -r requirements.txt
 ```
 
 #### 3.3. Convert LLM weights to TensorRT-LLM checkpoint format
-Here, we will use [Phi-3-mini-128k-instruct](https://huggingface.co/microsoft/Phi-3-mini-128k-instruct) model as an example.
 ```bash
 # You can use the `--model_dir` option to specify a Hugging Face model repository.
 python3 ./convert_checkpoint.py --model_type "Phi-3-mini-128k-instruct" --model_dir "microsoft/Phi-3-mini-128k-instruct" --output_dir ./phi-checkpoint --dtype float16
@@ -132,11 +131,11 @@ python3 ../run.py --engine_dir phi-engine/ --max_output_len 1024 --no_add_specia
 
 ### 4. Deploying a Model through Triton
 #### 4.1.  Docker image build for Triton serving
-There are several ways to create a Triton backend Docker image for model serving.
-The first method involves using the [NGC Triton image](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/tritonserver/tags).
-However, as of `06.16.2024`, the latest version of this image only supports up to TensorRT-LLM and TensorRT-LLM backend version v0.7.0.
-Therefore, to use the latest models like Phi3, LLaMA3, etc., you need to use v0.10.0, and for this version, you need to build the image yourself using the following command.
-I would take quite long time and you can get 72GB `triton_trt_llm` Docker image.
+모델 서빙을 위한 트리톤 backend 도커 이미지를 만들기 위해서 몇 가지 방법이 있습니다.
+첫 번째는 [NGC Triton image](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/tritonserver/tags)를 사용하는 것입니다.
+하지만 `24.06.16`를 기준으로 최신 버전의 이미지는 TensorRT-LLM과 TensorRT-LLM backend 버전 v0.7.0까지 밖에 지원하지 않습니다.
+따라서 Phi3, LLaMA3 등의 최신 모델을 사용하기 위해서는 v0.10.0을 사용해아하며, 이 버전을 위해서는 아래 명령어로 직접 이미지를 빌드해야합니다.
+이 과정은 시간이 많이 소요되며, 완료 되면 `triton_trt_llm`의 72GB 가량 크기의 Docker image가 생성 됩니다.
 ```bash
 cd /tensorrtllm_backend
 git lfs install
@@ -144,14 +143,14 @@ DOCKER_BUILDKIT=1 docker build -t triton_trt_llm -f dockerfile/Dockerfile.trt_ll
 ```
 
 #### 4.2. Execute the docker container
-* PATH_OF_THIS_REPO: Path of `tensorrtllm_backend` repository.
+* `PATH_OF_THIS_REPO`: Path of `tensorrtllm_backend` repository.
 ```bash
 docker run -d -it --name tensorrtllm-backend --net host --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864 --gpus all -p8000:8000 -p8001:8001 -p8002:8002 -v ${PATH_OF_THIS_REPO}:/tensorrtllm_backend triton_trt_llm 
 docker exec -it tensorrtllm-backend /bin/bash
 ```
 
 #### 4.3. Triton serving
-You have to place your model engine to `triton_model_repo`
+3.4의 과정에서 생성된 engine 데이터들을 모두 `triton_model_repo`로 복사합니다.
 ```bash
 cd /tensorrtllm_backend
 mkdir triton_model_repo
@@ -162,7 +161,7 @@ cp -r all_models/inflight_batcher_llm/tensorrt_llm triton_model_repo/
 # Copy the TRT engine to triton_model_repo/tensorrt_llm/1/
 cp tensorrt_llm/examples/phi/phi-engine/* triton_model_repo/tensorrt_llm/1/
 ```
-
+그리고 아래 명령어 중 하나로 Triton에 모델을 띄웁니다.
 ```bash
 cd /tensorrtllm_backend
 python3 scripts/launch_triton_server.py --model_repo=/tensorrtllm_backend/triton_model_repo --multi-model
@@ -700,4 +699,8 @@ parameters: {
 # }
 ```
 </details>
+<br><br>
 
+## Acknowledgement
+* [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)
+* [TensorRT-LLM Backend](https://github.com/triton-inference-server/tensorrtllm_backend)

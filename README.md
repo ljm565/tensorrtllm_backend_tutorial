@@ -101,7 +101,6 @@ pip3 install -r requirements.txt
 ```
 
 #### 3.3. Convert LLM weights to TensorRT-LLM checkpoint format
-Here, we will use [Phi-3-mini-128k-instruct](https://huggingface.co/microsoft/Phi-3-mini-128k-instruct) model as an example.
 ```bash
 # You can use the `--model_dir` option to specify a Hugging Face model repository.
 python3 ./convert_checkpoint.py --model_type "Phi-3-mini-128k-instruct" --model_dir "microsoft/Phi-3-mini-128k-instruct" --output_dir ./phi-checkpoint --dtype float16
@@ -151,7 +150,7 @@ docker exec -it tensorrtllm-backend /bin/bash
 ```
 
 #### 4.3. Triton serving
-You have to place your model engine to `triton_model_repo`
+Copy all engine data generated in the process from 3.4 to `triton_model_repo`.
 ```bash
 cd /tensorrtllm_backend
 mkdir triton_model_repo
@@ -162,7 +161,7 @@ cp -r all_models/inflight_batcher_llm/tensorrt_llm triton_model_repo/
 # Copy the TRT engine to triton_model_repo/tensorrt_llm/1/
 cp tensorrt_llm/examples/phi/phi-engine/* triton_model_repo/tensorrt_llm/1/
 ```
-
+And then use one of the following commands to deploy a model on Triton.
 ```bash
 cd /tensorrtllm_backend
 python3 scripts/launch_triton_server.py --model_repo=/tensorrtllm_backend/triton_model_repo --multi-model
