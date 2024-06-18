@@ -23,7 +23,7 @@ curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dear
 sudo sed -i -e '/experimental/ s/^#//g' /etc/apt/sources.list.d/nvidia-container-toolkit.list
 ```
 
-### 1.3. Install the NVIDIA Container Toolkit packages
+#### 1.3. Install the NVIDIA Container Toolkit packages
 ```bash
 sudo apt-get update
 sudo apt-get install -y nvidia-container-toolkit
@@ -43,10 +43,10 @@ git fetch origin refs/tags/v0.10.0
 git checkout tags/v0.10.0
 ```
 
-### 2.2. Docker environment settings
+#### 2.2. Docker environment settings
 We will set up the TensorRT-LLM execution environment using [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/cuda/tags)'s docker image.
-* PATH_OF_THIS_REPO: Path of `tensorrtllm_backend` repository.
-* PATH_OF_LOCAL_CACHE: Path of cache folder. Generally, the cache folder is created in the home directory (e.g. `~/.cache/`).
+* `PATH_OF_THIS_REPO`: Path of `tensorrtllm_backend` repository.
+* `PATH_OF_LOCAL_CACHE`: Path of cache folder. Generally, the cache folder is created in the home directory (e.g. `~/.cache/`).
 ```bash
 docker run --name tensorrt-llm --runtime=nvidia --gpus all --entrypoint /bin/bash -it -d -v ${PATH_OF_THIS_REPO}:/tensorrtllm_backend -v ${PATH_OF_LOCAL_CACHE}:/root/.cache nvidia/cuda:12.4.0-devel-ubuntu22.04
 ```
@@ -144,7 +144,7 @@ DOCKER_BUILDKIT=1 docker build -t triton_trt_llm -f dockerfile/Dockerfile.trt_ll
 ```
 
 #### 4.2. Execute the docker container
-* PATH_OF_THIS_REPO: Path of `tensorrtllm_backend` repository.
+* `PATH_OF_THIS_REPO`: Path of `tensorrtllm_backend` repository.
 ```bash
 docker run -d -it --name tensorrtllm-backend --net host --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864 --gpus all -p8000:8000 -p8001:8001 -p8002:8002 -v ${PATH_OF_THIS_REPO}:/tensorrtllm_backend triton_trt_llm 
 docker exec -it tensorrtllm-backend /bin/bash
