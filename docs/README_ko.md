@@ -1,4 +1,4 @@
-# TensorRT-LLM Backend
+# TensorRT-LLM Backend Tutorial
 
 ## Introduction
 본 레포지토리는 LLM 모델을 TensorRT로 변환하고, 변환된 모델을 Triton으로 serving 하는 과정을 간략히 정리합니다.
