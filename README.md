@@ -175,8 +175,7 @@ tritonserver --model-repository=/tensorrtllm_backend/triton_model_repo --model-c
 <summary><code>config.pbtxt</code> of the model</summary>
 
 ```python
-# Your Python code here
-# Copyright 2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ # Copyright 2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -207,7 +206,7 @@ backend: "tensorrtllm"
 max_batch_size: 4
 
 model_transaction_policy {
-  decoupled: true
+  decoupled: false
 }
 
 dynamic_batching {
@@ -219,7 +218,7 @@ input [
   {
     name: "input_ids"
     data_type: TYPE_INT32
-    dims: [ -1 ]
+    dims: [ -1 , 1 ]
     allow_ragged_batch: false
   },
   {
@@ -516,12 +515,12 @@ output [
     dims: [ -1, -1, -1 ]
   }
 ]
-#instance_group [
-#  {
-#    count: 1
-#    kind : KIND_CPU
-#  }
-#]
+instance_group [
+ {
+   count: 1
+   kind : KIND_CPU
+ }
+]
 parameters: {
   key: "max_beam_width"
   value: {
@@ -546,159 +545,64 @@ parameters: {
     string_value: "/tensorrtllm_backend/triton_model_repo/tensorrt_llm/1"
   }
 }
-# parameters: {
-#   key: "max_tokens_in_paged_kv_cache"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "max_attention_window_size"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "sink_token_length"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "batch_scheduler_policy"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "kv_cache_free_gpu_mem_fraction"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "kv_cache_host_memory_bytes"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "kv_cache_onboard_blocks"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# enable_trt_overlap is deprecated and doesn't have any effect on the runtime
-# parameters: {
-#   key: "enable_trt_overlap"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "exclude_input_in_output"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "cancellation_check_period_ms"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "stats_check_period_ms"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "iter_stats_max_iterations"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "request_stats_max_iterations"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "enable_kv_cache_reuse"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "normalize_log_probs"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "enable_chunked_context"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "gpu_device_ids"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "lora_cache_optimal_adapter_size"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "lora_cache_max_adapter_size"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "lora_cache_gpu_memory_fraction"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "lora_cache_host_memory_bytes"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "decoding_mode"
-#   value: {
-#     string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "executor_worker_path"
-#   value: {
-#     string_value: "/opt/tritonserver/backends/tensorrtllm/trtllmExecutorWorker"
-#   }
-# }
-# parameters: {
-#   key: "medusa_choices"
-#     value: {
-#       string_value: ""
-#   }
-# }
-# parameters: {
-#   key: "gpu_weights_percent"
-#     value: {
-#       string_value: ""
-#   }
-# }
 ```
 </details>
+
+
+#### 4.5. Inferencing via Triton client library
+Here, we will introduce the process of performing inference using gRPC communication through Python code with the [Triton client library](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/client/README.html).
+If the `tritonclient` library is not installed, please install it in the current serving Docker environment using the following command:
+```bash
+pip3 install tritonclient[all]
+```
+And you can perform inferencing using the following Python code:
+```python
+import time
+import numpy as np
+from transformers import AutoTokenizer
+import tritonclient.grpc as grpcclient
+
+
+prompt = """
+<s><|user|>What is the color of the sky?<|end|>
+<assistant>
+"""
+
+tokenizer = AutoTokenizer.from_pretrained("microsoft/Phi-3-mini-128k-instruct")
+ids = tokenizer.encode(prompt, add_special_tokens=False)
+ids = np.array(ids).reshape(1, len(ids), 1)
+triton_client = grpcclient.InferenceServerClient(url="localhost:8001")
+
+input_ids_arr = ids.astype(np.int32)
+input_ids = grpcclient.InferInput("input_ids", input_ids_arr.shape, "INT32")
+input_ids.set_data_from_numpy(input_ids_arr)
+
+input_lengths_arr = np.array([[1024]]).astype(np.int32)
+input_lengths = grpcclient.InferInput("input_lengths", input_lengths_arr.shape, "INT32")
+input_lengths.set_data_from_numpy(input_lengths_arr)
+
+request_output_len_arr = np.array([[1024]]).astype(np.int32)
+request_output_len = grpcclient.InferInput("request_output_len", request_output_len_arr.shape, "INT32")
+request_output_len.set_data_from_numpy(request_output_len_arr)
+
+end_id_arr = np.array([[32007]]).astype(np.int32)
+end_id = grpcclient.InferInput("end_id", end_id_arr.shape, "INT32")
+end_id.set_data_from_numpy(end_id_arr)
+
+
+response = triton_client.infer(
+                model_name='tensorrt_llm', 
+                inputs=[input_ids, input_lengths, request_output_len, end_id],
+                request_id="llm_request"
+            )
+
+output = response.as_numpy("output_ids")
+print('-'*100)
+print(output[0][0][ids.shape[1]:])
+print('-'*100)
+print(tokenizer.decode(output[0][0][ids.shape[1]:]))
+print('-'*100)
+```
 <br><br>
 
 ## Acknowledgement
