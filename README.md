@@ -77,7 +77,7 @@ nvidia-smi
 python3 -c "import tensorrt_llm"
 ```
 ```bash
-python -c "import torch; assert torch.cuda.is_available()"
+python3 -c "import torch; assert torch.cuda.is_available()"
 ```
 <br><br>
 
