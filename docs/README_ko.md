@@ -121,6 +121,10 @@ trtllm-build \
     --tp_size 1 \
     --pp_size 1
 ```
+* TensorRT libnvinfer_builder_resorce_win so 파일 오류 발생 시
+  ```bash
+  pip3 install tensorrt-cu12==10.0.1
+  ```
 
 #### 3.5. Compiled model test
 ```bash
