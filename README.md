@@ -9,6 +9,10 @@ The following tutorial uses Microsoft's [Phi3](https://huggingface.co/microsoft/
 <br><br><br>
 
 ## Environment Settings
+
+### 0. Preliminary
+* You have to install `525.85.12` nvidia driver version or higher.
+
 ### 1. [NVIDIA Container Toolkit Settings](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 #### 1.1. Configure the production repository
 ```bash

@@ -9,6 +9,10 @@
 <br><br><br>
 
 ## Environment Settings
+
+### 0. Preliminary
+* Nivida 드라이버 `525.85.12` 이상 버전이 설치되어야 합니다. 
+
 ### 1. [NVIDIA Container Toolkit Settings](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 #### 1.1. Configure the production repository
 ```bash
